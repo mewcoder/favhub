@@ -29,63 +29,69 @@ async function main() {
       per_page: 100,
     });
     
-    // 过滤只包含favorites标签的issues
-    const favoriteIssues = issues.filter(issue => {
-      const labels = issue.labels.map(label => 
-        typeof label === 'string' ? label.toLowerCase() : label.name.toLowerCase()
-      );
-      return labels.includes('favorites') 
-    });
+    // 过滤标题以"[收藏]"开头的issues
+    const favoriteIssues = issues.filter(issue => 
+      issue.title.trim().startsWith('[收藏]')
+    );
     
     // 处理收藏数据
     const favorites = favoriteIssues.map(issue => {
-      // 使用issue原始标题
-      const title = issue.title.trim();
+      // 使用issue原始标题，去掉"[收藏]"前缀
+      const title = issue.title.trim().replace(/^\[收藏\]\s*/, '');
 
       // 获取自定义标签
-      const bodyLines = issue.body.split('\n');
+      const bodyLines = issue.body ? issue.body.split('\n') : [];
       let url = '';
       let description = '';
       let tags = [];
 
-      bodyLines.forEach(line => {
-        // 查找链接行
-        if (line.includes('链接') && !url) {
-          // 尝试匹配纯URL格式
-          let match = line.match(/https?:\/\/[^\s")]+/);
-          if (match) {
-            url = match[0];
-          } else {
-            // 尝试匹配Markdown格式的链接 [text](url)
-            match = line.match(/\[.*?\]\((https?:\/\/[^)]+)\)/);
-            if (match) {
-              url = match[1];
-            } else {
-              // 检查下一行是否包含URL（处理链接文本和URL可能在不同行的情况）
-              const lineIndex = bodyLines.indexOf(line);
-              if (lineIndex !== -1 && lineIndex + 1 < bodyLines.length) {
-                const nextLine = bodyLines[lineIndex + 1].trim();
-                match = nextLine.match(/https?:\/\/[^\s")]+/);
-                if (match) {
-                  url = match[0];
-                }
+      // 处理URL (在"链接"后面的行)
+      for (let i = 0; i < bodyLines.length; i++) {
+        if (bodyLines[i].includes('### 链接') && i + 1 < bodyLines.length) {
+          // 检查下一行是否包含URL
+          for (let j = i + 1; j < bodyLines.length; j++) {
+            const nextLine = bodyLines[j].trim();
+            if (nextLine && !nextLine.startsWith('###')) {
+              const match = nextLine.match(/https?:\/\/[^\s")]+/);
+              if (match) {
+                url = match[0];
+                break;
               }
+            }
+            if (nextLine.startsWith('###')) {
+              break; // 下一个部分开始了，停止寻找URL
             }
           }
         }
-        if (line.includes('描述') && !description) {
-          const descIndex = bodyLines.indexOf(line);
-          if (descIndex !== -1 && bodyLines[descIndex + 1]) {
-            description = bodyLines[descIndex + 1].trim();
+        
+        // 处理描述
+        if (bodyLines[i].includes('### 描述') && i + 1 < bodyLines.length) {
+          for (let j = i + 1; j < bodyLines.length; j++) {
+            const nextLine = bodyLines[j].trim();
+            if (nextLine && !nextLine.startsWith('###') && nextLine !== '_No response_') {
+              description = nextLine;
+              break;
+            }
+            if (nextLine.startsWith('###')) {
+              break; // 下一个部分开始了，停止寻找描述
+            }
           }
         }
-        if (line.includes('标签') && line.includes(':')) {
-          const tagText = line.split(':')[1].trim();
-          if (tagText) {
-            tags = tagText.split(',').map(tag => tag.trim());
+        
+        // 处理标签
+        if (bodyLines[i].includes('### 标签') && i + 1 < bodyLines.length) {
+          for (let j = i + 1; j < bodyLines.length; j++) {
+            const nextLine = bodyLines[j].trim();
+            if (nextLine && !nextLine.startsWith('###') && nextLine !== '_No response_') {
+              tags = nextLine.split(',').map(tag => tag.trim());
+              break;
+            }
+            if (nextLine.startsWith('###')) {
+              break; // 下一个部分开始了，停止寻找标签
+            }
           }
         }
-      });
+      }
       
       return {
         id: issue.number,

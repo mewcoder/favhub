@@ -1,6 +1,6 @@
 name: 添加收藏
 description: 添加一个新的收藏项目
-title: ""
+title: "[收藏] "
 labels: ["favorites"]
 body:
   - type: markdown
