@@ -70,23 +70,28 @@ async function loadFavorites() {
   try {
     showLoading(true);
     
-    // 加载所有收藏
+    // 只加载收藏数据
     const favResponse = await fetch('data/favorites.json');
     if (!favResponse.ok) {
       throw new Error(`HTTP error! status: ${favResponse.status}`);
     }
     
-    // 加载所有标签
-    const tagsResponse = await fetch('data/tags.json');
-    if (!tagsResponse.ok) {
-      throw new Error(`HTTP error! status: ${tagsResponse.status}`);
-    }
+    allFavorites = await favResponse.json();
     
-    const favData = await favResponse.json();
-    const tagsData = await tagsResponse.json();
+    // 从收藏数据中提取所有唯一标签
+    allTags = [];
+    const tagSet = new Set();
     
-    allFavorites = favData;
-    allTags = tagsData;
+    allFavorites.forEach(item => {
+      if (Array.isArray(item.tags)) {
+        item.tags.forEach(tag => {
+          tagSet.add(tag);
+        });
+      }
+    });
+    
+    // 将Set转换为数组
+    allTags = Array.from(tagSet);
     
     // 计算每个标签的项目数量
     calculateTagCounts();
@@ -113,18 +118,20 @@ async function loadFavorites() {
 function calculateTagCounts() {
   tagCounts = {};
   
+  // 初始化所有标签的计数为0
   allTags.forEach(tag => {
-    tagCounts[tag] = 0;
+    if (tag && tag.trim() !== '') {
+      tagCounts[tag] = 0;
+    }
   });
   
+  // 计算每个标签的出现次数
   allFavorites.forEach(item => {
-    item.tags.forEach(tag => {
-      if (tagCounts[tag] !== undefined) {
+    const itemTags = Array.isArray(item.tags) ? item.tags : [];
+    
+    itemTags.forEach(tag => {
+      if (tag && tag.trim() !== '' && tagCounts[tag] !== undefined) {
         tagCounts[tag]++;
-      } else {
-        // 处理不在标签列表中的标签
-        tagCounts[tag] = 1;
-        allTags.push(tag);
       }
     });
   });
@@ -135,6 +142,12 @@ function initTagSelector() {
   const tagsList = document.getElementById('tags-list');
   tagsList.innerHTML = '';
   
+  // 如果没有标签，显示无标签消息
+  if (allTags.length === 0) {
+    tagsList.innerHTML = '<div class="py-1 text-white text-sm">没有可用的标签</div>';
+    return;
+  }
+  
   const template = document.getElementById('tag-option-template');
   
   // 按标签数量排序
@@ -143,66 +156,34 @@ function initTagSelector() {
   });
   
   sortedTags.forEach(tag => {
+    // 跳过空标签
+    if (!tag || tag.trim() === '') return;
+    
     const clone = template.content.cloneNode(true);
     const option = clone.querySelector('.tag-option');
-    const checkbox = clone.querySelector('.tag-checkbox');
     const nameSpan = clone.querySelector('.tag-name');
     const countSpan = clone.querySelector('.tag-count');
     
     nameSpan.textContent = tag;
     countSpan.textContent = `(${tagCounts[tag]})`;
-    checkbox.value = tag;
-    checkbox.checked = selectedTags.includes(tag);
+    
+    // 设置初始选中状态
+    if (selectedTags.includes(tag)) {
+      option.classList.add('bg-blue-300');
+    }
     
     option.addEventListener('click', () => {
-      checkbox.checked = !checkbox.checked;
-      if (checkbox.checked) {
-        addSelectedTag(tag);
-      } else {
+      const isSelected = selectedTags.includes(tag);
+      if (isSelected) {
         removeSelectedTag(tag);
-      }
-    });
-    
-    // 防止点击checkbox时触发两次
-    checkbox.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (checkbox.checked) {
-        addSelectedTag(tag);
+        option.classList.remove('bg-blue-300');
       } else {
-        removeSelectedTag(tag);
+        addSelectedTag(tag);
+        option.classList.add('bg-blue-300');
       }
     });
     
     tagsList.appendChild(clone);
-  });
-  
-  // 设置标签搜索功能
-  const tagSearch = document.getElementById('tag-search');
-  tagSearch.addEventListener('input', () => {
-    const query = tagSearch.value.toLowerCase();
-    document.querySelectorAll('.tag-option').forEach(option => {
-      const tagName = option.querySelector('.tag-name').textContent.toLowerCase();
-      if (tagName.includes(query)) {
-        option.style.display = '';
-      } else {
-        option.style.display = 'none';
-      }
-    });
-  });
-  
-  // 设置标签选择器下拉菜单
-  const dropdownButton = document.getElementById('tags-dropdown-button');
-  const dropdownMenu = document.getElementById('tags-dropdown-menu');
-  
-  dropdownButton.addEventListener('click', () => {
-    dropdownMenu.classList.toggle('hidden');
-  });
-  
-  // 点击外部关闭下拉菜单
-  document.addEventListener('click', (event) => {
-    if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
-      dropdownMenu.classList.add('hidden');
-    }
   });
   
   // 清除标签按钮
@@ -217,10 +198,11 @@ function addSelectedTag(tag) {
   renderSelectedTags();
   applyFilters();
   
-  // 更新标签选择器中的复选框状态
-  document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
-    if (checkbox.value === tag) {
-      checkbox.checked = true;
+  // 更新标签列表中的选择状态
+  document.querySelectorAll('.tag-option').forEach(option => {
+    const tagName = option.querySelector('.tag-name').textContent;
+    if (tagName === tag) {
+      option.classList.add('bg-blue-300');
     }
   });
 }
@@ -233,10 +215,11 @@ function removeSelectedTag(tag) {
     renderSelectedTags();
     applyFilters();
     
-    // 更新标签选择器中的复选框状态
-    document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
-      if (checkbox.value === tag) {
-        checkbox.checked = false;
+    // 更新标签列表中的选择状态
+    document.querySelectorAll('.tag-option').forEach(option => {
+      const tagName = option.querySelector('.tag-name').textContent;
+      if (tagName === tag) {
+        option.classList.remove('bg-blue-300');
       }
     });
   }
@@ -248,9 +231,9 @@ function clearAllTags() {
   renderSelectedTags();
   applyFilters();
   
-  // 更新标签选择器中的所有复选框状态
-  document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
-    checkbox.checked = false;
+  // 更新标签列表中的所有选择状态
+  document.querySelectorAll('.tag-option').forEach(option => {
+    option.classList.remove('bg-blue-300');
   });
 }
 
@@ -285,52 +268,75 @@ function renderSelectedTags() {
 // 渲染收藏列表
 function renderFavorites() {
   const container = document.getElementById('favorites-container');
+  const noResults = document.getElementById('no-results');
+  
+  // 清空容器
   container.innerHTML = '';
   
-  const template = document.getElementById('favorite-template');
-  
   if (filteredFavorites.length === 0) {
-    document.getElementById('no-results').classList.remove('hidden');
-    return;
+    noResults.classList.remove('hidden');
+  } else {
+    noResults.classList.add('hidden');
   }
   
-  document.getElementById('no-results').classList.add('hidden');
+  // 使用模板渲染每个收藏项
+  const template = document.getElementById('favorite-template');
   
   filteredFavorites.forEach(favorite => {
     const clone = template.content.cloneNode(true);
     
-    // 填充内容
-    const titleLink = clone.querySelector('.favorite-link');
-    titleLink.textContent = favorite.title;
-    titleLink.href = favorite.url;
+    const link = clone.querySelector('.favorite-link');
+    link.href = favorite.url;
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener');
+    
+    const title = clone.querySelector('.favorite-title');
+    title.textContent = favorite.title;
     
     const description = clone.querySelector('.favorite-description');
-    description.textContent = favorite.description || '没有描述';
+    description.textContent = favorite.description || '无描述';
     
+    // 渲染标签
     const tagsContainer = clone.querySelector('.favorite-tags');
-    if (favorite.tags && favorite.tags.length > 0) {
-      favorite.tags.forEach(tag => {
-        const tagEl = document.createElement('span');
+    tagsContainer.innerHTML = '';
+    
+    // 确保favorite.tags是数组
+    const favoriteTags = Array.isArray(favorite.tags) ? favorite.tags : [];
+    
+    if (favoriteTags.length === 0) {
+      const noTag = document.createElement('span');
+      noTag.className = 'text-gray-300 text-[10px]';
+      noTag.textContent = '无标签';
+      tagsContainer.appendChild(noTag);
+    } else {
+      // 最多显示3个标签
+      const displayTags = favoriteTags.slice(0, 3);
+      
+      displayTags.forEach(tag => {
+        if (!tag || tag.trim() === '') return;
         
-        // 已选中的标签高亮显示
-        if (selectedTags.includes(tag)) {
-          tagEl.className = 'bg-blue-500 text-white px-2 py-1 rounded mr-2 mb-2 cursor-pointer';
-        } else {
-          tagEl.className = 'bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-2 cursor-pointer';
-        }
-        
+        const tagEl = document.createElement('div');
+        tagEl.className = 'tag bg-gray-50 text-gray-500 cursor-pointer hover:bg-blue-50 hover:text-blue-500';
         tagEl.textContent = tag;
-        tagEl.addEventListener('click', () => {
-          // 点击标签时切换选择状态
-          if (selectedTags.includes(tag)) {
-            removeSelectedTag(tag);
-          } else {
+        
+        tagEl.addEventListener('click', (e) => {
+          e.preventDefault(); // 防止点击标签时触发卡片链接
+          e.stopPropagation(); // 阻止事件冒泡
+          if (!selectedTags.includes(tag)) {
             addSelectedTag(tag);
           }
         });
         
         tagsContainer.appendChild(tagEl);
       });
+      
+      // 如果有更多标签，显示+n
+      if (favoriteTags.length > 3) {
+        const moreTag = document.createElement('div');
+        moreTag.className = 'tag bg-gray-50 text-gray-400';
+        moreTag.textContent = `+${favoriteTags.length - 3}`;
+        tagsContainer.appendChild(moreTag);
+      }
     }
     
     const date = clone.querySelector('.favorite-date');
@@ -343,9 +349,12 @@ function renderFavorites() {
 // 应用筛选条件
 function applyFilters() {
   filteredFavorites = allFavorites.filter(item => {
+    // 确保item.tags是数组
+    const itemTags = Array.isArray(item.tags) ? item.tags : [];
+    
     // 标签筛选
     const tagMatch = selectedTags.length === 0 || 
-                    selectedTags.every(tag => item.tags.includes(tag));
+                    selectedTags.every(tag => itemTags.includes(tag));
     
     // 搜索筛选
     if (!searchQuery) {
@@ -355,7 +364,7 @@ function applyFilters() {
     const query = searchQuery.toLowerCase();
     const titleMatch = (item.title || '').toLowerCase().includes(query);
     const descMatch = (item.description || '').toLowerCase().includes(query);
-    const tagsMatch = (item.tags || []).some(tag => 
+    const tagsMatch = itemTags.some(tag => 
       tag.toLowerCase().includes(query)
     );
     
@@ -414,17 +423,6 @@ async function initApp() {
   // 加载数据
   const success = await loadFavorites();
   if (!success) return;
-  
-  // 设置分类导航事件监听
-  const categoryNav = document.getElementById('category-nav');
-  categoryNav.addEventListener('click', event => {
-    const target = event.target;
-    if (target.tagName === 'LI') {
-      const category = target.getAttribute('data-category');
-      updateCategoryNav(category);
-      filterFavorites(category, document.getElementById('search-input').value);
-    }
-  });
   
   // 设置搜索事件监听
   const searchButton = document.getElementById('search-button');

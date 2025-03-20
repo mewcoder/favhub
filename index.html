@@ -8,94 +8,143 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome 图标 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* 现代化渐变背景 */
+    body {
+      background: #f9fafb;
+    }
+    
+    /* 添加美观的过渡效果 */
+    .hover-scale {
+      transition: all 0.2s ease;
+    }
+    .hover-scale:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    /* 修复搜索框文本颜色 */
+    #search-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    #search-input {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* 卡片样式优化 */
+    .card {
+      border-radius: 8px;
+      overflow: hidden;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* 标签样式 */
+    .tag {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    
+    /* 卡片内容区域 */
+    .card-content {
+      flex: 1;
+    }
+    
+    /* 滚动条美化 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
-  <header class="bg-blue-500 text-white shadow-md">
-    <div class="container mx-auto px-4 py-4 md:py-6 flex flex-col md:flex-row justify-between items-center">
-      <h1 class="text-2xl font-bold mb-4 md:mb-0"><i class="fas fa-star mr-2"></i>我的收藏</h1>
-      <div class="w-full md:w-auto max-w-md">
-        <div class="flex">
-          <input 
-            type="text" 
-            id="search-input" 
-            placeholder="搜索收藏..." 
-            class="flex-grow px-4 py-2 rounded-l focus:outline-none" 
-          />
-          <button 
-            id="search-button" 
-            class="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700 transition-colors"
+<body class="text-gray-800 min-h-screen flex flex-col">
+  <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-sm">
+    <div class="container mx-auto px-3 py-3">
+      <div class="flex flex-col md:flex-row justify-between items-center mb-2">
+        <h1 class="text-xl font-bold mb-2 md:mb-0"><i class="fas fa-bookmark mr-1"></i>我的收藏</h1>
+        <div class="flex items-center gap-2">
+          <a 
+            href="#" 
+            id="new-favorite-link" 
+            target="_blank" 
+            rel="noopener"
+            class="inline-flex items-center bg-green-500 hover:bg-green-600 text-white px-2.5 py-0.5 rounded-full transition-colors shadow-sm text-xs"
           >
-            <i class="fas fa-search"></i>
+            <i class="fas fa-plus-circle mr-1"></i> 添加收藏
+          </a>
+          <div class="w-full md:w-auto">
+            <div class="flex">
+              <input 
+                type="text" 
+                id="search-input" 
+                placeholder="搜索收藏..." 
+                class="w-36 px-2 py-1 rounded-l text-xs focus:outline-none border-0" 
+              />
+              <button 
+                id="search-button" 
+                class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-r transition-colors text-xs"
+              >
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 标签列表 -->
+      <div class="py-1.5">
+        <div class="flex flex-wrap items-center gap-2 mb-1.5">
+          <span class="text-xs text-white/90">标签筛选:</span>
+          <button id="clear-tags" class="text-xs bg-red-400 hover:bg-red-500 px-2 py-0.5 rounded-full text-white text-[10px]">
+            清除
           </button>
+        </div>
+        <div id="tags-list" class="flex flex-wrap gap-1 py-1 max-h-20 overflow-y-auto">
+          <!-- 标签选项将在JS中动态生成 -->
+          <div class="py-1 text-white text-xs">加载中...</div>
+        </div>
+        <div id="selected-tags" class="flex flex-wrap gap-1 mt-1">
+          <!-- 已选择的标签会显示在这里 -->
         </div>
       </div>
     </div>
   </header>
 
-  <div class="bg-white shadow">
-    <div class="container mx-auto px-4 py-4">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="text-lg font-semibold">标签筛选</h2>
-        <div>
-          <button id="clear-tags" class="text-sm text-blue-500 hover:underline">清除筛选</button>
-          <div class="relative inline-block ml-3">
-            <button 
-              id="tags-dropdown-button" 
-              class="px-3 py-1 bg-blue-500 text-white rounded flex items-center"
-            >
-              选择标签 <i class="fas fa-chevron-down ml-2"></i>
-            </button>
-            <div 
-              id="tags-dropdown-menu" 
-              class="absolute right-0 mt-1 bg-white border rounded shadow-lg z-10 w-60 max-h-80 overflow-y-auto hidden"
-            >
-              <div class="p-2 border-b">
-                <input 
-                  type="text" 
-                  id="tag-search" 
-                  class="w-full px-2 py-1 border rounded text-sm" 
-                  placeholder="搜索标签..."
-                />
-              </div>
-              <div id="tags-list" class="p-2">
-                <!-- 标签选项将在JS中动态生成 -->
-                <div class="py-1 text-gray-400 text-sm">加载中...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="selected-tags" class="flex flex-wrap gap-2">
-        <!-- 已选择的标签会显示在这里 -->
-      </div>
-    </div>
-  </div>
-
-  <main class="container mx-auto px-4 py-6 flex-grow">
-    <div id="loading" class="text-center py-12">
-      <i class="fas fa-spinner fa-spin text-blue-500 text-3xl mb-4"></i>
-      <p class="text-lg text-gray-600">加载中...</p>
+  <main class="container mx-auto px-3 py-3 flex-grow">
+    <div id="loading" class="text-center py-8">
+      <i class="fas fa-spinner fa-spin text-blue-500 text-2xl mb-3"></i>
+      <p class="text-gray-600">加载中...</p>
     </div>
     
-    <div id="favorites-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <div id="favorites-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"></div>
     
-    <div id="no-results" class="text-center py-12 hidden">
-      <p class="text-lg text-gray-600">没有找到匹配的收藏项</p>
+    <div id="no-results" class="text-center py-8 hidden">
+      <p class="text-gray-600">没有找到匹配的收藏项</p>
     </div>
   </main>
 
-  <footer class="mt-auto py-6 border-t border-gray-200 text-center text-gray-600">
-    <div class="container mx-auto px-4">
+  <footer class="mt-auto py-3 border-t border-gray-100 text-center text-gray-500 bg-white/80">
+    <div class="container mx-auto px-3 text-xs">
       <p>使用 <a href="https://github.com/features/actions" class="text-blue-500 hover:underline">GitHub Actions</a> 自动同步 Issues 到 JSON 并通过 <a href="https://pages.github.com/" class="text-blue-500 hover:underline">GitHub Pages</a> 展示</p>
-      <p class="mt-3">
-        <a 
-          href="#" 
-          id="new-favorite-link" 
-          target="_blank" 
-          rel="noopener"
-          class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
-        >
-          <i class="fas fa-plus-circle mr-2"></i> 添加新收藏
+      <p class="mt-1.5">
+        <a href="https://github.com/saveweb/review-2023" class="text-blue-600 hover:text-blue-800 font-medium" target="_blank">
+          <i class="fab fa-github mr-1"></i> GitHub 原仓库
         </a>
       </p>
     </div>
@@ -103,32 +152,33 @@
 
   <!-- 收藏项目模板 -->
   <template id="favorite-template">
-    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-5 border border-gray-100 hover:translate-y-[-2px] transition-transform">
-      <h2 class="text-xl font-semibold mb-2 text-blue-600">
-        <a href="#" class="favorite-link hover:underline" target="_blank" rel="noopener"></a>
-      </h2>
-      <p class="favorite-description text-gray-600 mb-4 line-clamp-3"></p>
-      <div class="flex flex-wrap items-center text-sm">
-        <div class="favorite-tags flex flex-wrap"></div>
-        <span class="favorite-date text-gray-500 ml-auto"></span>
+    <div class="card bg-white shadow-sm hover:shadow transition-shadow border border-gray-100 hover-scale">
+      <a href="#" class="favorite-link block p-3 card-content">
+        <h2 class="text-sm font-medium mb-1.5 text-blue-700 line-clamp-1 hover:underline">
+          <span class="favorite-title"></span>
+        </h2>
+        <p class="favorite-description text-gray-500 mb-2 text-xs line-clamp-2"></p>
+      </a>
+      <div class="mt-auto px-3 pb-2 flex flex-wrap items-center text-[10px] border-t border-gray-50 pt-1.5">
+        <div class="favorite-tags flex flex-wrap gap-1 overflow-hidden max-h-10"></div>
+        <span class="favorite-date text-gray-400 ml-auto mt-1 text-[10px]"></span>
       </div>
     </div>
   </template>
 
   <!-- 标签选择项模板 -->
   <template id="tag-option-template">
-    <div class="flex items-center py-1 px-1 hover:bg-gray-100 rounded cursor-pointer tag-option">
-      <input type="checkbox" class="mr-2 tag-checkbox">
-      <span class="tag-name text-sm"></span>
-      <span class="tag-count text-xs text-gray-500 ml-auto"></span>
+    <div class="bg-blue-50 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-blue-100 tag-option tag">
+      <span class="tag-name"></span>
+      <span class="tag-count text-blue-500 ml-0.5 opacity-70"></span>
     </div>
   </template>
 
   <!-- 已选择标签模板 -->
   <template id="selected-tag-template">
-    <div class="inline-flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded">
-      <span class="tag-name mr-1"></span>
-      <button class="remove-tag text-xs hover:text-red-500">
+    <div class="inline-flex items-center bg-blue-500 text-white px-1.5 py-0.5 rounded-full tag">
+      <span class="tag-name text-[10px]"></span>
+      <button class="remove-tag text-[10px] ml-0.5 hover:text-red-200">
         <i class="fas fa-times"></i>
       </button>
     </div>
