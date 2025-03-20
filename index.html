@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的收藏 | My Favorites</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome 图标 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <header class="bg-blue-500 text-white shadow-md">
+    <div class="container mx-auto px-4 py-4 md:py-6 flex flex-col md:flex-row justify-between items-center">
+      <h1 class="text-2xl font-bold mb-4 md:mb-0"><i class="fas fa-star mr-2"></i>我的收藏</h1>
+      <div class="w-full md:w-auto max-w-md">
+        <div class="flex">
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="搜索收藏..." 
+            class="flex-grow px-4 py-2 rounded-l focus:outline-none" 
+          />
+          <button 
+            id="search-button" 
+            class="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700 transition-colors"
+          >
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="bg-white shadow">
+    <div class="container mx-auto px-4">
+      <ul id="category-nav" class="flex overflow-x-auto py-3 space-x-2">
+        <li class="px-4 py-2 rounded-full cursor-pointer whitespace-nowrap bg-blue-500 text-white" data-category="all">全部</li>
+        <li class="px-4 py-2 rounded-full cursor-pointer whitespace-nowrap hover:bg-blue-100 transition-colors" data-category="网站">网站</li>
+        <li class="px-4 py-2 rounded-full cursor-pointer whitespace-nowrap hover:bg-blue-100 transition-colors" data-category="工具">工具</li>
+        <li class="px-4 py-2 rounded-full cursor-pointer whitespace-nowrap hover:bg-blue-100 transition-colors" data-category="文章">文章</li>
+        <li class="px-4 py-2 rounded-full cursor-pointer whitespace-nowrap hover:bg-blue-100 transition-colors" data-category="视频">视频</li>
+        <li class="px-4 py-2 rounded-full cursor-pointer whitespace-nowrap hover:bg-blue-100 transition-colors" data-category="书籍">书籍</li>
+        <li class="px-4 py-2 rounded-full cursor-pointer whitespace-nowrap hover:bg-blue-100 transition-colors" data-category="其他">其他</li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-4 py-6 flex-grow">
+    <div id="loading" class="text-center py-12">
+      <i class="fas fa-spinner fa-spin text-blue-500 text-3xl mb-4"></i>
+      <p class="text-lg text-gray-600">加载中...</p>
+    </div>
+    
+    <div id="favorites-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    
+    <div id="no-results" class="text-center py-12 hidden">
+      <p class="text-lg text-gray-600">没有找到匹配的收藏项</p>
+    </div>
+  </main>
+
+  <footer class="mt-auto py-6 border-t border-gray-200 text-center text-gray-600">
+    <div class="container mx-auto px-4">
+      <p>使用 <a href="https://github.com/features/actions" class="text-blue-500 hover:underline">GitHub Actions</a> 自动同步 Issues 到 JSON 并通过 <a href="https://pages.github.com/" class="text-blue-500 hover:underline">GitHub Pages</a> 展示</p>
+      <p class="mt-3">
+        <a 
+          href="#" 
+          id="new-favorite-link" 
+          target="_blank" 
+          rel="noopener"
+          class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
+        >
+          <i class="fas fa-plus-circle mr-2"></i> 添加新收藏
+        </a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- 收藏项目模板 -->
+  <template id="favorite-template">
+    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-5 border border-gray-100 hover:translate-y-[-2px] transition-transform">
+      <h2 class="text-xl font-semibold mb-2 text-blue-600">
+        <a href="#" class="favorite-link hover:underline" target="_blank" rel="noopener"></a>
+      </h2>
+      <p class="favorite-description text-gray-600 mb-4 line-clamp-3"></p>
+      <div class="flex flex-wrap items-center text-sm">
+        <span class="favorite-category bg-gray-100 px-2 py-1 rounded mr-2 mb-2"></span>
+        <div class="favorite-tags flex flex-wrap"></div>
+        <span class="favorite-date text-gray-500 ml-auto"></span>
+      </div>
+    </div>
+  </template>
+
+  <script src="scripts/main.js"></script>
+</body>
+</html> 

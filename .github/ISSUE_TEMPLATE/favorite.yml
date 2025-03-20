@@ -1,0 +1,61 @@
+name: 添加收藏
+description: 添加一个新的收藏项目
+title: "[收藏] "
+labels: ["待分类"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 添加收藏
+        请填写以下信息以添加一个新的收藏项目。
+        
+  - type: input
+    id: title
+    attributes:
+      label: 标题
+      description: 收藏项目的标题
+      placeholder: "例如：一个有用的工具"
+    validations:
+      required: true
+      
+  - type: input
+    id: url
+    attributes:
+      label: 链接
+      description: 收藏项目的URL
+      placeholder: "https://example.com"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: 描述
+      description: 简要描述为什么收藏这个项目
+      placeholder: "这个工具可以帮助..."
+    validations:
+      required: false
+      
+  - type: dropdown
+    id: category
+    attributes:
+      label: 分类
+      description: 选择一个主分类
+      options:
+        - 网站
+        - 工具
+        - 文章
+        - 视频
+        - 书籍
+        - 其他
+    validations:
+      required: true
+      
+  - type: input
+    id: tags
+    attributes:
+      label: 标签
+      description: 用逗号分隔的标签列表
+      placeholder: "开发,效率,工具"
+    validations:
+      required: false 

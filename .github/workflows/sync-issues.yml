@@ -1,0 +1,36 @@
+name: 同步Issues到JSON数据
+
+on:
+  issues:
+    types: [opened, edited, deleted, closed, reopened, labeled, unlabeled]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # 每天执行一次
+
+jobs:
+  sync-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+
+      - name: 设置Node.js环境
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: 安装依赖
+        run: npm install @octokit/rest
+
+      - name: 获取Issues并生成JSON
+        run: node .github/scripts/sync-issues.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 提交更新的数据
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/
+          git commit -m "自动更新收藏数据" || echo "没有变更"
+          git push 
