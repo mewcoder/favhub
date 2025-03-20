@@ -37,25 +37,36 @@ body:
       required: false
       
   - type: dropdown
-    id: category
+    id: tags
     attributes:
-      label: 分类
-      description: 选择一个主分类
+      label: 标签
+      description: 选择适合的标签（可多选）
+      multiple: true
       options:
         - 网站
         - 工具
         - 文章
         - 视频
         - 书籍
+        - 开发
+        - 教程
+        - 设计
+        - 效率
+        - 前端
+        - 后端
+        - AI
+        - 移动
+        - 算法
+        - 学习
         - 其他
     validations:
       required: true
       
   - type: input
-    id: tags
+    id: custom_tags
     attributes:
-      label: 标签
-      description: 用逗号分隔的标签列表
-      placeholder: "开发,效率,工具"
+      label: 自定义标签
+      description: 如需添加其他标签，请用逗号分隔
+      placeholder: "标签1,标签2,标签3"
     validations:
       required: false 

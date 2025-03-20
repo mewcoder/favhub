@@ -1,6 +1,10 @@
 // 全局变量
 let allFavorites = [];
 let filteredFavorites = [];
+let allTags = [];
+let tagCounts = {};
+let selectedTags = [];
+let searchQuery = '';
 let currentCategory = 'all';
 let repoInfo = null;
 
@@ -66,16 +70,34 @@ async function loadFavorites() {
   try {
     showLoading(true);
     
-    const response = await fetch('data/favorites.json');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    // 加载所有收藏
+    const favResponse = await fetch('data/favorites.json');
+    if (!favResponse.ok) {
+      throw new Error(`HTTP error! status: ${favResponse.status}`);
     }
     
-    const data = await response.json();
-    allFavorites = data;
-    filteredFavorites = [...allFavorites];
+    // 加载所有标签
+    const tagsResponse = await fetch('data/tags.json');
+    if (!tagsResponse.ok) {
+      throw new Error(`HTTP error! status: ${tagsResponse.status}`);
+    }
     
+    const favData = await favResponse.json();
+    const tagsData = await tagsResponse.json();
+    
+    allFavorites = favData;
+    allTags = tagsData;
+    
+    // 计算每个标签的项目数量
+    calculateTagCounts();
+    
+    // 初始化标签选择器
+    initTagSelector();
+    
+    // 初始显示所有收藏
+    filteredFavorites = [...allFavorites];
     renderFavorites();
+    
     showLoading(false);
     
     return true;
@@ -85,6 +107,179 @@ async function loadFavorites() {
     showError('数据加载失败，请稍后再试');
     return false;
   }
+}
+
+// 计算每个标签的数量
+function calculateTagCounts() {
+  tagCounts = {};
+  
+  allTags.forEach(tag => {
+    tagCounts[tag] = 0;
+  });
+  
+  allFavorites.forEach(item => {
+    item.tags.forEach(tag => {
+      if (tagCounts[tag] !== undefined) {
+        tagCounts[tag]++;
+      } else {
+        // 处理不在标签列表中的标签
+        tagCounts[tag] = 1;
+        allTags.push(tag);
+      }
+    });
+  });
+}
+
+// 初始化标签选择器
+function initTagSelector() {
+  const tagsList = document.getElementById('tags-list');
+  tagsList.innerHTML = '';
+  
+  const template = document.getElementById('tag-option-template');
+  
+  // 按标签数量排序
+  const sortedTags = [...allTags].sort((a, b) => {
+    return tagCounts[b] - tagCounts[a];
+  });
+  
+  sortedTags.forEach(tag => {
+    const clone = template.content.cloneNode(true);
+    const option = clone.querySelector('.tag-option');
+    const checkbox = clone.querySelector('.tag-checkbox');
+    const nameSpan = clone.querySelector('.tag-name');
+    const countSpan = clone.querySelector('.tag-count');
+    
+    nameSpan.textContent = tag;
+    countSpan.textContent = `(${tagCounts[tag]})`;
+    checkbox.value = tag;
+    checkbox.checked = selectedTags.includes(tag);
+    
+    option.addEventListener('click', () => {
+      checkbox.checked = !checkbox.checked;
+      if (checkbox.checked) {
+        addSelectedTag(tag);
+      } else {
+        removeSelectedTag(tag);
+      }
+    });
+    
+    // 防止点击checkbox时触发两次
+    checkbox.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (checkbox.checked) {
+        addSelectedTag(tag);
+      } else {
+        removeSelectedTag(tag);
+      }
+    });
+    
+    tagsList.appendChild(clone);
+  });
+  
+  // 设置标签搜索功能
+  const tagSearch = document.getElementById('tag-search');
+  tagSearch.addEventListener('input', () => {
+    const query = tagSearch.value.toLowerCase();
+    document.querySelectorAll('.tag-option').forEach(option => {
+      const tagName = option.querySelector('.tag-name').textContent.toLowerCase();
+      if (tagName.includes(query)) {
+        option.style.display = '';
+      } else {
+        option.style.display = 'none';
+      }
+    });
+  });
+  
+  // 设置标签选择器下拉菜单
+  const dropdownButton = document.getElementById('tags-dropdown-button');
+  const dropdownMenu = document.getElementById('tags-dropdown-menu');
+  
+  dropdownButton.addEventListener('click', () => {
+    dropdownMenu.classList.toggle('hidden');
+  });
+  
+  // 点击外部关闭下拉菜单
+  document.addEventListener('click', (event) => {
+    if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
+      dropdownMenu.classList.add('hidden');
+    }
+  });
+  
+  // 清除标签按钮
+  document.getElementById('clear-tags').addEventListener('click', clearAllTags);
+}
+
+// 添加已选标签
+function addSelectedTag(tag) {
+  if (selectedTags.includes(tag)) return;
+  
+  selectedTags.push(tag);
+  renderSelectedTags();
+  applyFilters();
+  
+  // 更新标签选择器中的复选框状态
+  document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
+    if (checkbox.value === tag) {
+      checkbox.checked = true;
+    }
+  });
+}
+
+// 移除已选标签
+function removeSelectedTag(tag) {
+  const index = selectedTags.indexOf(tag);
+  if (index !== -1) {
+    selectedTags.splice(index, 1);
+    renderSelectedTags();
+    applyFilters();
+    
+    // 更新标签选择器中的复选框状态
+    document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
+      if (checkbox.value === tag) {
+        checkbox.checked = false;
+      }
+    });
+  }
+}
+
+// 清除所有已选标签
+function clearAllTags() {
+  selectedTags = [];
+  renderSelectedTags();
+  applyFilters();
+  
+  // 更新标签选择器中的所有复选框状态
+  document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+}
+
+// 渲染已选标签
+function renderSelectedTags() {
+  const container = document.getElementById('selected-tags');
+  container.innerHTML = '';
+  
+  const template = document.getElementById('selected-tag-template');
+  
+  if (selectedTags.length === 0) {
+    const emptyMsg = document.createElement('span');
+    emptyMsg.className = 'text-gray-500 text-sm';
+    emptyMsg.textContent = '未选择标签，显示全部收藏';
+    container.appendChild(emptyMsg);
+    return;
+  }
+  
+  selectedTags.forEach(tag => {
+    const clone = template.content.cloneNode(true);
+    const tagEl = clone.querySelector('div');
+    const tagName = clone.querySelector('.tag-name');
+    const removeBtn = clone.querySelector('.remove-tag');
+    
+    tagName.textContent = tag;
+    removeBtn.addEventListener('click', () => removeSelectedTag(tag));
+    
+    container.appendChild(clone);
+  });
 }
 
 // 渲染收藏列表
@@ -112,15 +307,28 @@ function renderFavorites() {
     const description = clone.querySelector('.favorite-description');
     description.textContent = favorite.description || '没有描述';
     
-    const category = clone.querySelector('.favorite-category');
-    category.textContent = favorite.category;
-    
     const tagsContainer = clone.querySelector('.favorite-tags');
     if (favorite.tags && favorite.tags.length > 0) {
       favorite.tags.forEach(tag => {
         const tagEl = document.createElement('span');
-        tagEl.className = 'bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-2';
+        
+        // 已选中的标签高亮显示
+        if (selectedTags.includes(tag)) {
+          tagEl.className = 'bg-blue-500 text-white px-2 py-1 rounded mr-2 mb-2 cursor-pointer';
+        } else {
+          tagEl.className = 'bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-2 cursor-pointer';
+        }
+        
         tagEl.textContent = tag;
+        tagEl.addEventListener('click', () => {
+          // 点击标签时切换选择状态
+          if (selectedTags.includes(tag)) {
+            removeSelectedTag(tag);
+          } else {
+            addSelectedTag(tag);
+          }
+        });
+        
         tagsContainer.appendChild(tagEl);
       });
     }
@@ -132,17 +340,16 @@ function renderFavorites() {
   });
 }
 
-// 过滤收藏项
-function filterFavorites(category, searchQuery = '') {
-  currentCategory = category;
-  
+// 应用筛选条件
+function applyFilters() {
   filteredFavorites = allFavorites.filter(item => {
-    // 分类过滤
-    const categoryMatch = category === 'all' || item.category === category;
+    // 标签筛选
+    const tagMatch = selectedTags.length === 0 || 
+                    selectedTags.every(tag => item.tags.includes(tag));
     
-    // 搜索过滤
+    // 搜索筛选
     if (!searchQuery) {
-      return categoryMatch;
+      return tagMatch;
     }
     
     const query = searchQuery.toLowerCase();
@@ -152,7 +359,7 @@ function filterFavorites(category, searchQuery = '') {
       tag.toLowerCase().includes(query)
     );
     
-    return categoryMatch && (titleMatch || descMatch || tagsMatch);
+    return tagMatch && (titleMatch || descMatch || tagsMatch);
   });
   
   renderFavorites();
@@ -185,8 +392,10 @@ function showError(message) {
 }
 
 // 更新"添加新收藏"链接
-function updateNewFavoriteLink() {
+async function updateNewFavoriteLink() {
+  const repoInfo = await getRepoInfo();
   const link = document.getElementById('new-favorite-link');
+  
   if (!repoInfo) {
     link.style.display = 'none';
     return;
@@ -222,12 +431,14 @@ async function initApp() {
   const searchInput = document.getElementById('search-input');
   
   searchButton.addEventListener('click', () => {
-    filterFavorites(currentCategory, searchInput.value);
+    searchQuery = searchInput.value;
+    applyFilters();
   });
   
   searchInput.addEventListener('keyup', event => {
     if (event.key === 'Enter') {
-      filterFavorites(currentCategory, searchInput.value);
+      searchQuery = searchInput.value;
+      applyFilters();
     }
   });
 }

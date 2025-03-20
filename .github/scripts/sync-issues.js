@@ -16,15 +16,11 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// 定义标签到分类的映射
-const CATEGORY_LABELS = {
-  'website': '网站',
-  'tool': '工具',
-  'article': '文章',
-  'video': '视频',
-  'book': '书籍',
-  'other': '其他'
-};
+// 常用标签，用于生成单独的JSON文件
+const COMMON_TAGS = [
+  '网站', '工具', '文章', '视频', '书籍', '开发', '教程', 
+  '设计', '效率', '前端', '后端', 'AI', '移动', '算法', '学习'
+];
 
 // 收藏特殊标识
 const FAVORITE_IDENTIFIER = '[收藏]';
@@ -72,6 +68,7 @@ function parseIssue(issue) {
   const bodyLines = (issue.body || '').split('\n');
   let url = '';
   let description = '';
+  let customTags = [];
   
   // 尝试从Issue模板中提取字段
   for (const line of bodyLines) {
@@ -79,6 +76,11 @@ function parseIssue(issue) {
       url = line.split(':').slice(1).join(':').trim();
     } else if (line.includes('描述:') || line.includes('简介:')) {
       description = line.split(':').slice(1).join(':').trim();
+    } else if (line.includes('自定义标签:')) {
+      const customTagsText = line.split(':').slice(1).join(':').trim();
+      if (customTagsText) {
+        customTags = customTagsText.split(',').map(tag => tag.trim()).filter(Boolean);
+      }
     }
   }
   
@@ -87,32 +89,20 @@ function parseIssue(issue) {
     description = issue.body.substring(0, 200) + (issue.body.length > 200 ? '...' : '');
   }
   
-  // 提取标签/分类
+  // 提取所有标签
   const labels = issue.labels.map(label => 
     typeof label === 'string' ? label : label.name
-  );
+  ).filter(label => label !== '待分类');
   
-  // 确定主分类
-  let category = '其他';
-  for (const label of labels) {
-    if (CATEGORY_LABELS[label.toLowerCase()]) {
-      category = CATEGORY_LABELS[label.toLowerCase()];
-      break;
-    }
-  }
-  
-  // 提取标签（除了分类标签）
-  const tags = labels.filter(label => 
-    !Object.keys(CATEGORY_LABELS).includes(label.toLowerCase())
-  );
+  // 合并自定义标签
+  const allTags = [...new Set([...labels, ...customTags])];
   
   return {
     id: issue.number,
     title,
     url,
     description,
-    category,
-    tags,
+    tags: allTags,
     created_at: issue.created_at,
     updated_at: issue.updated_at
   };
@@ -126,13 +116,21 @@ async function main() {
     // 解析每个issue
     const favorites = issues.map(parseIssue);
     
-    // 按分类组织数据
-    const categorizedData = {};
+    // 按标签组织数据
+    const taggedData = {};
+    // 初始化常用标签的数组
+    COMMON_TAGS.forEach(tag => {
+      taggedData[tag] = [];
+    });
+    
+    // 为每个收藏项添加到对应标签的数组中
     for (const item of favorites) {
-      if (!categorizedData[item.category]) {
-        categorizedData[item.category] = [];
+      for (const tag of item.tags) {
+        if (!taggedData[tag]) {
+          taggedData[tag] = [];
+        }
+        taggedData[tag].push(item);
       }
-      categorizedData[item.category].push(item);
     }
     
     // 写入总数据
@@ -141,13 +139,22 @@ async function main() {
       JSON.stringify(favorites, null, 2)
     );
     
-    // 为每个分类创建单独的JSON文件
-    for (const [category, items] of Object.entries(categorizedData)) {
-      fs.writeFileSync(
-        path.join(dataDir, `${category}.json`),
-        JSON.stringify(items, null, 2)
-      );
+    // 为每个标签创建单独的JSON文件
+    for (const [tag, items] of Object.entries(taggedData)) {
+      if (items.length > 0) {
+        fs.writeFileSync(
+          path.join(dataDir, `tag-${tag}.json`),
+          JSON.stringify(items, null, 2)
+        );
+      }
     }
+    
+    // 写入所有标签列表
+    const allTags = Object.keys(taggedData);
+    fs.writeFileSync(
+      path.join(dataDir, 'tags.json'),
+      JSON.stringify(allTags, null, 2)
+    );
     
     console.log('成功更新收藏数据');
   } catch (error) {
