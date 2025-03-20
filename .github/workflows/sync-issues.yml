@@ -18,7 +18,7 @@ jobs:
           node-version: 16
 
       - name: 安装依赖
-        run: npm install @octokit/rest
+        run: npm install @octokit/rest@18.12.0
 
       - name: 获取Issues并生成JSON
         run: node .github/scripts/sync-issues.js
