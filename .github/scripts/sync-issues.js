@@ -68,7 +68,7 @@ async function main() {
         if (bodyLines[i].includes('### 描述') && i + 1 < bodyLines.length) {
           for (let j = i + 1; j < bodyLines.length; j++) {
             const nextLine = bodyLines[j].trim();
-            if (nextLine && !nextLine.startsWith('###') && nextLine !== '_No response_'&& nextLine !== 'N/A') {
+            if (nextLine && !nextLine.startsWith('###') && nextLine !== '_No response_') {
               description = nextLine;
               break;
             }
@@ -82,7 +82,7 @@ async function main() {
         if (bodyLines[i].includes('### 标签') && i + 1 < bodyLines.length) {
           for (let j = i + 1; j < bodyLines.length; j++) {
             const nextLine = bodyLines[j].trim();
-            if (nextLine && !nextLine.startsWith('###') && nextLine !== '_No response_'&& nextLine !== 'N/A') {
+            if (nextLine && !nextLine.startsWith('###') && nextLine !== '_No response_') {
               tags = nextLine.split(',').map(tag => tag.trim());
               break;
             }

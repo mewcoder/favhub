@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 构造Issue URL
     const issueUrl = `https://github.com/${owner}/${repo}/issues/new?title=${encodeURIComponent(`[收藏] ${title}`)}&labels=favorites&body=${encodeURIComponent(
-      `### 链接\n${url}\n\n### 描述\n${description || 'N/A'}\n\n### 标签\n${tags.join(', ') || 'N/A'}`
+      `### 链接\n${url}\n\n### 描述\n${description || ''}\n\n### 标签\n${tags.join(', ') || ''}`
     )}`;
     
     // 在新标签页中打开GitHub Issue创建页面
