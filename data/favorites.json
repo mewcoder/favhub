@@ -1,20 +1,20 @@
 [
   {
     "id": 3,
-    "title": "[收藏] 极客时间在线文档",
+    "title": "极客时间在线文档",
     "url": "",
     "description": "",
     "tags": [],
     "created_at": "2025-03-20T03:09:24Z",
-    "updated_at": "2025-03-20T04:33:06Z"
+    "updated_at": "2025-03-20T04:45:03Z"
   },
   {
     "id": 2,
-    "title": "[收藏] pixabay 免费图片素材",
+    "title": "pixabay 图片素材",
     "url": "",
     "description": "",
     "tags": [],
     "created_at": "2025-03-20T02:58:37Z",
-    "updated_at": "2025-03-20T04:32:56Z"
+    "updated_at": "2025-03-20T04:45:23Z"
   }
 ]
