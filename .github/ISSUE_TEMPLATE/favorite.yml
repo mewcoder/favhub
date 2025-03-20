@@ -10,15 +10,6 @@ body:
         请填写以下信息以添加一个新的收藏项目。
         
   - type: input
-    id: title
-    attributes:
-      label: 标题
-      description: 收藏项目的标题
-      placeholder: "例如：一个有用的工具"
-    validations:
-      required: true
-      
-  - type: input
     id: url
     attributes:
       label: 链接
