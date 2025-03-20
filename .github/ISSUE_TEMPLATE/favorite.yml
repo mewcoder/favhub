@@ -52,12 +52,3 @@ body:
         - 其他
     validations:
       required: true
-      
-  - type: input
-    id: custom_tags
-    attributes:
-      label: 自定义标签
-      description: 如需添加其他标签，请用逗号分隔
-      placeholder: "标签1,标签2,标签3"
-    validations:
-      required: false 

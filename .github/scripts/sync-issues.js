@@ -49,9 +49,29 @@ async function main() {
       let tags = [];
 
       bodyLines.forEach(line => {
+        // 查找链接行
         if (line.includes('链接') && !url) {
-          const match = line.match(/https?:\/\/[^\s"]+/);
-          if (match) url = match[0];
+          // 尝试匹配纯URL格式
+          let match = line.match(/https?:\/\/[^\s")]+/);
+          if (match) {
+            url = match[0];
+          } else {
+            // 尝试匹配Markdown格式的链接 [text](url)
+            match = line.match(/\[.*?\]\((https?:\/\/[^)]+)\)/);
+            if (match) {
+              url = match[1];
+            } else {
+              // 检查下一行是否包含URL（处理链接文本和URL可能在不同行的情况）
+              const lineIndex = bodyLines.indexOf(line);
+              if (lineIndex !== -1 && lineIndex + 1 < bodyLines.length) {
+                const nextLine = bodyLines[lineIndex + 1].trim();
+                match = nextLine.match(/https?:\/\/[^\s")]+/);
+                if (match) {
+                  url = match[0];
+                }
+              }
+            }
+          }
         }
         if (line.includes('描述') && !description) {
           const descIndex = bodyLines.indexOf(line);
@@ -59,7 +79,7 @@ async function main() {
             description = bodyLines[descIndex + 1].trim();
           }
         }
-        if (line.includes('自定义标签') && line.includes(':')) {
+        if (line.includes('标签') && line.includes(':')) {
           const tagText = line.split(':')[1].trim();
           if (tagText) {
             tags = tagText.split(',').map(tag => tag.trim());
@@ -72,7 +92,7 @@ async function main() {
         title,
         url,
         description,
-        tags: tags.filter(Boolean),
+        tags,
         created_at: issue.created_at,
         updated_at: issue.updated_at,
       };
