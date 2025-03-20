@@ -34,20 +34,10 @@ body:
       description: 选择适合的标签（可多选）
       multiple: true
       options:
-        - 网站
         - 工具
         - 文章
-        - 视频
-        - 书籍
-        - 开发
-        - 教程
         - 设计
-        - 效率
-        - 前端
-        - 后端
         - AI
-        - 移动
-        - 算法
         - 学习
         - 其他
     validations:

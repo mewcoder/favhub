@@ -3,10 +3,16 @@ let allFavorites = [];
 let filteredFavorites = [];
 let allTags = [];
 let tagCounts = {};
-let selectedTags = [];
 let searchQuery = '';
-let currentCategory = 'all';
 let repoInfo = null;
+let customRenderFunction = null; // 自定义渲染钩子
+
+// 允许设置自定义标签渲染函数
+function setCustomTagRenderer(renderFn) {
+  if (typeof renderFn === 'function') {
+    customRenderFunction = renderFn;
+  }
+}
 
 // 工具函数
 function formatDate(dateString) {
@@ -70,7 +76,7 @@ async function loadFavorites() {
   try {
     showLoading(true);
     
-    // 只加载收藏数据
+    // 加载收藏数据
     const favResponse = await fetch('data/favorites.json');
     if (!favResponse.ok) {
       throw new Error(`HTTP error! status: ${favResponse.status}`);
@@ -137,210 +143,82 @@ function calculateTagCounts() {
   });
 }
 
-// 初始化标签选择器
+// 初始化标签选择器（这个函数会被自定义的单选标签逻辑覆盖）
 function initTagSelector() {
-  const tagsList = document.getElementById('tags-list');
-  tagsList.innerHTML = '';
-  
-  // 如果没有标签，显示无标签消息
-  if (allTags.length === 0) {
-    tagsList.innerHTML = '<div class="py-1 text-white text-sm">没有可用的标签</div>';
-    return;
-  }
-  
-  const template = document.getElementById('tag-option-template');
-  
-  // 按标签数量排序
-  const sortedTags = [...allTags].sort((a, b) => {
-    return tagCounts[b] - tagCounts[a];
-  });
-  
-  sortedTags.forEach(tag => {
-    // 跳过空标签
-    if (!tag || tag.trim() === '') return;
-    
-    const clone = template.content.cloneNode(true);
-    const option = clone.querySelector('.tag-option');
-    const nameSpan = clone.querySelector('.tag-name');
-    const countSpan = clone.querySelector('.tag-count');
-    
-    nameSpan.textContent = tag;
-    countSpan.textContent = `(${tagCounts[tag]})`;
-    
-    // 设置初始选中状态
-    if (selectedTags.includes(tag)) {
-      option.classList.add('bg-blue-300');
-    }
-    
-    option.addEventListener('click', () => {
-      const isSelected = selectedTags.includes(tag);
-      if (isSelected) {
-        removeSelectedTag(tag);
-        option.classList.remove('bg-blue-300');
-      } else {
-        addSelectedTag(tag);
-        option.classList.add('bg-blue-300');
-      }
-    });
-    
-    tagsList.appendChild(clone);
-  });
-  
-  // 清除标签按钮
-  document.getElementById('clear-tags').addEventListener('click', clearAllTags);
-}
-
-// 添加已选标签
-function addSelectedTag(tag) {
-  if (selectedTags.includes(tag)) return;
-  
-  selectedTags.push(tag);
-  renderSelectedTags();
-  applyFilters();
-  
-  // 更新标签列表中的选择状态
-  document.querySelectorAll('.tag-option').forEach(option => {
-    const tagName = option.querySelector('.tag-name').textContent;
-    if (tagName === tag) {
-      option.classList.add('bg-blue-300');
-    }
-  });
-}
-
-// 移除已选标签
-function removeSelectedTag(tag) {
-  const index = selectedTags.indexOf(tag);
-  if (index !== -1) {
-    selectedTags.splice(index, 1);
-    renderSelectedTags();
-    applyFilters();
-    
-    // 更新标签列表中的选择状态
-    document.querySelectorAll('.tag-option').forEach(option => {
-      const tagName = option.querySelector('.tag-name').textContent;
-      if (tagName === tag) {
-        option.classList.remove('bg-blue-300');
-      }
-    });
-  }
-}
-
-// 清除所有已选标签
-function clearAllTags() {
-  selectedTags = [];
-  renderSelectedTags();
-  applyFilters();
-  
-  // 更新标签列表中的所有选择状态
-  document.querySelectorAll('.tag-option').forEach(option => {
-    option.classList.remove('bg-blue-300');
-  });
-}
-
-// 渲染已选标签
-function renderSelectedTags() {
-  const container = document.getElementById('selected-tags');
-  container.innerHTML = '';
-  
-  const template = document.getElementById('selected-tag-template');
-  
-  if (selectedTags.length === 0) {
-    const emptyMsg = document.createElement('span');
-    emptyMsg.className = 'text-gray-500 text-sm';
-    emptyMsg.textContent = '未选择标签，显示全部收藏';
-    container.appendChild(emptyMsg);
-    return;
-  }
-  
-  selectedTags.forEach(tag => {
-    const clone = template.content.cloneNode(true);
-    const tagEl = clone.querySelector('div');
-    const tagName = clone.querySelector('.tag-name');
-    const removeBtn = clone.querySelector('.remove-tag');
-    
-    tagName.textContent = tag;
-    removeBtn.addEventListener('click', () => removeSelectedTag(tag));
-    
-    container.appendChild(clone);
-  });
+  // 此处留空，将由单选标签的实现覆盖
 }
 
 // 渲染收藏列表
 function renderFavorites() {
   const container = document.getElementById('favorites-container');
-  const noResults = document.getElementById('no-results');
-  
-  // 清空容器
   container.innerHTML = '';
   
+  // 如果没有收藏显示空状态
   if (filteredFavorites.length === 0) {
-    noResults.classList.remove('hidden');
+    document.getElementById('no-results').classList.remove('hidden');
+    return;
   } else {
-    noResults.classList.add('hidden');
+    document.getElementById('no-results').classList.add('hidden');
   }
   
-  // 使用模板渲染每个收藏项
   const template = document.getElementById('favorite-template');
   
   filteredFavorites.forEach(favorite => {
     const clone = template.content.cloneNode(true);
     
+    // 设置标题
+    const titleSpan = clone.querySelector('.favorite-title');
+    titleSpan.textContent = favorite.title || '无标题';
+    
+    // 设置URL
+    const urlElement = clone.querySelector('.favorite-url .url-text');
     const link = clone.querySelector('.favorite-link');
-    link.href = favorite.url;
-    link.setAttribute('target', '_blank');
-    link.setAttribute('rel', 'noopener');
     
-    const title = clone.querySelector('.favorite-title');
-    title.textContent = favorite.title;
-    
-    const description = clone.querySelector('.favorite-description');
-    description.textContent = favorite.description || '无描述';
-    
-    // 渲染标签
-    const tagsContainer = clone.querySelector('.favorite-tags');
-    tagsContainer.innerHTML = '';
-    
-    // 确保favorite.tags是数组
-    const favoriteTags = Array.isArray(favorite.tags) ? favorite.tags : [];
-    
-    if (favoriteTags.length === 0) {
-      const noTag = document.createElement('span');
-      noTag.className = 'text-gray-300 text-[10px]';
-      noTag.textContent = '无标签';
-      tagsContainer.appendChild(noTag);
-    } else {
-      // 最多显示3个标签
-      const displayTags = favoriteTags.slice(0, 3);
-      
-      displayTags.forEach(tag => {
-        if (!tag || tag.trim() === '') return;
-        
-        const tagEl = document.createElement('div');
-        tagEl.className = 'tag bg-gray-50 text-gray-500 cursor-pointer hover:bg-blue-50 hover:text-blue-500';
-        tagEl.textContent = tag;
-        
-        tagEl.addEventListener('click', (e) => {
-          e.preventDefault(); // 防止点击标签时触发卡片链接
-          e.stopPropagation(); // 阻止事件冒泡
-          if (!selectedTags.includes(tag)) {
-            addSelectedTag(tag);
-          }
-        });
-        
-        tagsContainer.appendChild(tagEl);
-      });
-      
-      // 如果有更多标签，显示+n
-      if (favoriteTags.length > 3) {
-        const moreTag = document.createElement('div');
-        moreTag.className = 'tag bg-gray-50 text-gray-400';
-        moreTag.textContent = `+${favoriteTags.length - 3}`;
-        tagsContainer.appendChild(moreTag);
+    // 处理URL
+    let displayUrl = '';
+    try {
+      const url = new URL(favorite.url);
+      displayUrl = url.hostname + (url.pathname !== '/' ? url.pathname : '');
+      // 截断过长的URL
+      if (displayUrl.length > 40) {
+        displayUrl = displayUrl.substring(0, 37) + '...';
+      }
+    } catch (e) {
+      displayUrl = favorite.url || '';
+      if (displayUrl.length > 40) {
+        displayUrl = displayUrl.substring(0, 37) + '...';
       }
     }
     
-    const date = clone.querySelector('.favorite-date');
-    date.textContent = formatDate(favorite.created_at);
+    urlElement.textContent = displayUrl;
+    link.href = favorite.url || '#';
+    
+    // 设置目标为新窗口打开
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    
+    // 设置描述
+    const description = clone.querySelector('.favorite-description');
+    description.textContent = favorite.description || '无描述';
+    
+    // 设置标签
+    const tagsContainer = clone.querySelector('.favorite-tags');
+    if (Array.isArray(favorite.tags) && favorite.tags.length > 0) {
+      favorite.tags.forEach(tag => {
+        if (!tag || tag.trim() === '') return;
+        
+        const tagElement = document.createElement('span');
+        // 添加统一的标签类名，以便筛选功能可以找到它
+        tagElement.className = 'tag bg-indigo-50 text-indigo-700';
+        tagElement.textContent = tag;
+        tagsContainer.appendChild(tagElement);
+      });
+    }
+    
+    // 设置日期
+    const dateElement = clone.querySelector('.favorite-date');
+    const dateText = favorite.created_at ? formatDate(favorite.created_at) : '';
+    dateElement.textContent = dateText;
     
     container.appendChild(clone);
   });
@@ -348,17 +226,24 @@ function renderFavorites() {
 
 // 应用筛选条件
 function applyFilters() {
+  console.log('应用筛选，搜索词:', searchQuery);
+  
+  // 如果搜索词为空且没有自定义筛选函数，显示全部收藏
+  if (!searchQuery && !customRenderFunction) {
+    console.log('没有搜索词且没有自定义筛选，显示全部收藏');
+    filteredFavorites = [...allFavorites];
+    renderFavorites();
+    return;
+  }
+  
+  // 搜索筛选逻辑
   filteredFavorites = allFavorites.filter(item => {
     // 确保item.tags是数组
     const itemTags = Array.isArray(item.tags) ? item.tags : [];
     
-    // 标签筛选
-    const tagMatch = selectedTags.length === 0 || 
-                    selectedTags.every(tag => itemTags.includes(tag));
-    
-    // 搜索筛选
+    // 如果没有搜索词，返回true（不影响筛选）
     if (!searchQuery) {
-      return tagMatch;
+      return true;
     }
     
     const query = searchQuery.toLowerCase();
@@ -368,24 +253,18 @@ function applyFilters() {
       tag.toLowerCase().includes(query)
     );
     
-    return tagMatch && (titleMatch || descMatch || tagsMatch);
+    const isMatch = titleMatch || descMatch || tagsMatch;
+    return isMatch;
   });
   
+  console.log(`搜索结果: 找到 ${filteredFavorites.length} 个匹配项`);
   renderFavorites();
-}
-
-// 更新分类导航激活状态
-function updateCategoryNav(category) {
-  const navItems = document.querySelectorAll('#category-nav li');
-  navItems.forEach(item => {
-    if (item.getAttribute('data-category') === category) {
-      item.classList.add('bg-blue-500', 'text-white');
-      item.classList.remove('hover:bg-blue-100');
-    } else {
-      item.classList.remove('bg-blue-500', 'text-white');
-      item.classList.add('hover:bg-blue-100');
-    }
-  });
+  
+  // 如果存在自定义筛选函数，在搜索筛选后再应用
+  if (customRenderFunction && typeof customRenderFunction === 'function') {
+    console.log('应用自定义筛选函数');
+    customRenderFunction('全部'); // 应用自定义筛选，但保留搜索结果
+  }
 }
 
 // 显示/隐藏加载状态
@@ -424,20 +303,33 @@ async function initApp() {
   const success = await loadFavorites();
   if (!success) return;
   
+  // 确保全局变量可被外部访问
+  window.allTags = allTags;
+  window.tagCounts = tagCounts;
+  window.setCustomTagRenderer = setCustomTagRenderer;
+  
   // 设置搜索事件监听
   const searchButton = document.getElementById('search-button');
   const searchInput = document.getElementById('search-input');
   
+  // 点击搜索按钮时搜索
   searchButton.addEventListener('click', () => {
     searchQuery = searchInput.value;
     applyFilters();
   });
   
+  // 按下Enter键时搜索
   searchInput.addEventListener('keyup', event => {
     if (event.key === 'Enter') {
       searchQuery = searchInput.value;
       applyFilters();
     }
+  });
+  
+  // 添加实时搜索功能
+  searchInput.addEventListener('input', () => {
+    searchQuery = searchInput.value;
+    applyFilters();
   });
 }
 
