@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 - 简化的书签形状 -->
+  <path d="M2 2 L126 2 L126 120 L64 98 L2 120 Z" 
+        fill="#8a2be2" 
+        stroke="#6a1b9a" 
+        stroke-width="3" />
+  
+  <!-- 简洁明了的F字母 -->
+  <text x="38" y="90" 
+        font-family="Arial, sans-serif" 
+        font-size="100" 
+        font-weight="bold"
+        fill="#ffffff">F</text>
+        
+</svg> 

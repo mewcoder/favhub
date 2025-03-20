@@ -39,6 +39,7 @@ body:
         - 设计
         - AI
         - 学习
+        - 常用
         - 其他
     validations:
       required: true

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.svg" alt="favhub logo" width="128" height="128">
+</p>
+
 # 🌟 favhub 收藏管理 🌟
 
 📚 使用 GitHub Issues 管理收藏，并通过 GitHub Pages 展示的个人收藏网站。让你的书签管理更加高效！

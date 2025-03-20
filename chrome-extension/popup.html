@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>favhub 收藏助手</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>favhub 收藏助手</h1>
+      <p class="subtitle">快速收藏网页并发送到 GitHub Issues</p>
+    </header>
+
+    <form id="bookmark-form">
+      <div class="form-group">
+        <label for="title">标题</label>
+        <input type="text" id="title" name="title" placeholder="网页标题" required>
+      </div>
+
+      <div class="form-group">
+        <label for="url">网址</label>
+        <input type="url" id="url" name="url" placeholder="https://example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="description">描述</label>
+        <textarea id="description" name="description" placeholder="简要描述为什么收藏这个网页..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>标签</label>
+        <div class="tags-container" id="tags-container">
+          <div class="tag-item">
+            <input type="checkbox" id="tag-tool" name="tags" value="工具">
+            <label for="tag-tool">工具</label>
+          </div>
+          <div class="tag-item">
+            <input type="checkbox" id="tag-article" name="tags" value="文章">
+            <label for="tag-article">文章</label>
+          </div>
+          <div class="tag-item">
+            <input type="checkbox" id="tag-design" name="tags" value="设计">
+            <label for="tag-design">设计</label>
+          </div>
+          <div class="tag-item">
+            <input type="checkbox" id="tag-ai" name="tags" value="AI">
+            <label for="tag-ai">AI</label>
+          </div>
+          <div class="tag-item">
+            <input type="checkbox" id="tag-study" name="tags" value="学习">
+            <label for="tag-study">学习</label>
+          </div>
+          <div class="tag-item">
+            <input type="checkbox" id="tag-other" name="tags" value="其他">
+            <label for="tag-other">其他</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" id="repo-config">
+        <label for="github-repo">GitHub 仓库</label>
+        <div class="repo-input">
+          <input type="text" id="github-repo" name="github-repo" placeholder="用户名/仓库名" required>
+          <button type="button" id="save-repo" class="btn-small">保存</button>
+        </div>
+        <div class="repo-notice">
+          <p id="repo-status">请输入您的favhub仓库信息</p>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="submit" id="submit-button" class="btn primary-btn">
+          <span id="loading-spinner" class="spinner hidden"></span>
+          <span id="button-text">保存收藏</span>
+        </button>
+      </div>
+    </form>
+
+    <div id="status-message" class="status-message hidden"></div>
+
+    <footer>
+      <p>我的 <a href="https://mewcoder.github.io/favhub/" target="_blank">favhub</a> </p>
+    </footer>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 
