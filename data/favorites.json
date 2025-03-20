@@ -1,9 +1,20 @@
 [
   {
+    "id": 7,
+    "title": "大模型基础-浙江大学",
+    "url": "https://github.com/ZJU-LLMs/Foundations-of-LLMs",
+    "description": "书籍",
+    "tags": [
+      "AI"
+    ],
+    "created_at": "2025-03-20T07:31:44Z",
+    "updated_at": "2025-03-20T07:31:44Z"
+  },
+  {
     "id": 6,
     "title": "Chromium History Versions Download",
     "url": "https://vikyd.github.io/download-chromium-history-version/#/",
-    "description": "N/A",
+    "description": "",
     "tags": [
       "工具"
     ],
