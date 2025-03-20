@@ -77,7 +77,9 @@ async function loadFavorites() {
     showLoading(true);
     
     // 加载收藏数据
-    const favResponse = await fetch('data/favorites.json');
+    // 添加时间戳参数避免缓存
+    const timestamp = new Date().getTime();
+    const favResponse = await fetch(`data/favorites.json?t=${timestamp}`);
     if (!favResponse.ok) {
       throw new Error(`HTTP error! status: ${favResponse.status}`);
     }
