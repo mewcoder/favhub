@@ -2,7 +2,7 @@
 <svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
   <!-- 背景 - 简化的书签形状 -->
   <path d="M2 2 L126 2 L126 120 L64 98 L2 120 Z" 
-        fill="#8a2be2" 
+        fill="#4f46e5" 
         stroke="#6a1b9a" 
         stroke-width="3" />
   

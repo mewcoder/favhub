@@ -208,8 +208,8 @@ function renderFavorites() {
         if (!tag || tag.trim() === '') return;
         
         const tagElement = document.createElement('span');
-        // 添加统一的标签类名，以便筛选功能可以找到它
-        tagElement.className = 'tag bg-indigo-50 text-indigo-700';
+        // 使用Tailwind默认类
+        tagElement.className = 'tag text-[0.65rem] py-0.5 px-2 rounded-full whitespace-nowrap font-medium bg-indigo-50 text-indigo-600';
         tagElement.textContent = tag;
         tagsContainer.appendChild(tagElement);
       });
