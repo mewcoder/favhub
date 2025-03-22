@@ -1,5 +1,16 @@
 [
   {
+    "id": 10,
+    "title": "AutoCorrect",
+    "url": "https://huacnlee.github.io/autocorrect/",
+    "description": "一个代码检查器和格式器，帮助你改进文案，纠正中日韩（中文、日文、韩文）之间的空格、单词和标点符号。",
+    "tags": [
+      "工具"
+    ],
+    "created_at": "2025-03-22T02:43:28Z",
+    "updated_at": "2025-03-22T02:43:28Z"
+  },
+  {
     "id": 9,
     "title": "doocs 微信md编辑器",
     "url": "https://md.doocs.org/",
