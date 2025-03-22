@@ -1,5 +1,16 @@
 [
   {
+    "id": 8,
+    "title": "ResumeGO",
+    "url": "https://resumego.ai/zh",
+    "description": "AI驱动的专业简历生成器",
+    "tags": [
+      "工具"
+    ],
+    "created_at": "2025-03-22T02:20:05Z",
+    "updated_at": "2025-03-22T02:20:05Z"
+  },
+  {
     "id": 7,
     "title": "大模型基础-浙江大学",
     "url": "https://github.com/ZJU-LLMs/Foundations-of-LLMs",
@@ -14,7 +25,7 @@
     "id": 6,
     "title": "Chromium History Versions Download",
     "url": "https://vikyd.github.io/download-chromium-history-version/#/",
-    "description": "",
+    "description": "N/A",
     "tags": [
       "工具"
     ],
