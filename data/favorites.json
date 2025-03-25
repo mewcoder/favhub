@@ -1,5 +1,16 @@
 [
   {
+    "id": 11,
+    "title": "Chrome Platform Status",
+    "url": "https://chromestatus.com/roadmap",
+    "description": "跟踪Chrome特性的开发阶段与状态",
+    "tags": [
+      "工具"
+    ],
+    "created_at": "2025-03-25T08:23:32Z",
+    "updated_at": "2025-03-25T08:23:32Z"
+  },
+  {
     "id": 10,
     "title": "AutoCorrect",
     "url": "https://huacnlee.github.io/autocorrect/",
